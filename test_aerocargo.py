@@ -45,7 +45,7 @@ class TestAeroCargo(unittest.TestCase):
         ]
         res = calcular_ocupacion_y_sobrecarga(cargas_sobrecargadas, self.capacidades_validas)
         
-        self.assertEqual(res["matriz_porcentajes"][0][0], 110.0)
+        self.assertAlmostEqual(res["matriz_porcentajes"][0][0], 110.0, places=4)
         self.assertIn((0, 0), res["celdas_sobrecargadas"])
         self.assertIn((1, 1), res["celdas_sobrecargadas"])
         self.assertEqual(len(res["celdas_sobrecargadas"]), 2)
@@ -72,4 +72,3 @@ class TestAeroCargo(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    

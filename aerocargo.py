@@ -68,9 +68,11 @@ def evaluar_balance_y_simetria(cargas_reales, tolerancia_kg):
     suma_derecha = 0.0
     
     for i in range(n):
+        # Sumar lado izquierdo (babor)
         for j in range(mitad_m):
             suma_izquierda += cargas_reales[i][j]
             
+        # Sumar lado derecho (estribor), ignorando columna central si M es impar
         inicio_derecha = mitad_m + 1 if m % 2 != 0 else mitad_m
         for j in range(inicio_derecha, m):
             suma_derecha += cargas_reales[i][j]
