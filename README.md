@@ -1,4 +1,5 @@
-Markdown# AeroCargo-Matrix (Auditoría de Carga Matricial)
+Markdown 
+#AeroCargo-Matrix (Auditoría de Carga Matricial)
 
 Sistema interactivo en Python para la auditoría, procesamiento matricial, análisis de balance físico y detección de sobrecargas en aeronaves comerciales y de carga.
 
