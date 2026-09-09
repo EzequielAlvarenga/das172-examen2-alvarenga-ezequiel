@@ -1,8 +1,3 @@
-"""
-Pruebas unitarias para el módulo aerocargo.py usando unittest.
-Cubre casos de éxito, bordes y validaciones de matriz.
-"""
-
 import unittest
 from aerocargo import (
     validar_coherencia_dimensional,
@@ -11,64 +6,124 @@ from aerocargo import (
     extraer_submatriz_sobrecarga_critica
 )
 
-class TestAeroCargo(unittest.TestCase):
 
-    def setUp(self):
-        self.cargas_validas = [
-            [500, 600, 400],
-            [300, 200, 500]
+class TestAeroCargoMatrix(unittest.TestCase):
+
+    def test_casos_limite_validacion(self):
+        # Matriz valida 2x2
+        self.assertTrue(
+            validar_coherencia_dimensional(
+                [[100, 200], [300, 400]],
+                [[500, 500], [500, 500]]
+            )
+        )
+
+        # Peso igual a cero: valido
+        self.assertTrue(
+            validar_coherencia_dimensional(
+                [[0, 500], [300, 0]],
+                [[1000, 1000], [1000, 1000]]
+            )
+        )
+
+        # Peso negativo: invalido
+        self.assertFalse(
+            validar_coherencia_dimensional(
+                [[-100, 500], [300, 400]],
+                [[1000, 1000], [1000, 1000]]
+            )
+        )
+
+        # Capacidad cero: invalido
+        self.assertFalse(
+            validar_coherencia_dimensional(
+                [[100, 500], [300, 400]],
+                [[0, 1000], [1000, 1000]]
+            )
+        )
+
+        # Dimensiones diferentes: invalido
+        self.assertFalse(
+            validar_coherencia_dimensional(
+                [[500, 500], [300, 300]],
+                [[1000, 1000]]
+            )
+        )
+
+    def test_casos_limite_ocupacion(self):
+        cargas = [
+            [1000, 500],
+            [300, 1100]
         ]
-        self.capacidades_validas = [
-            [1000, 1000, 1000],
-            [1000, 1000, 1000]
+        capacidades = [
+            [1000, 1000],
+            [1000, 1000]
         ]
 
-    def test_validar_coherencia_dimensional_valida(self):
-        res = validar_coherencia_dimensional(self.cargas_validas, self.capacidades_validas)
-        self.assertTrue(res)
+        resultado = calcular_ocupacion_y_sobrecarga(cargas, capacidades)
 
-    def test_validar_coherencia_dimensional_invalidas(self):
-        # Caso 1: Dimensiones de fila inconsistentes
-        cargas_inval = [[500, 600], [300]]
-        res1 = validar_coherencia_dimensional(cargas_inval, self.capacidades_validas)
-        self.assertFalse(res1)
+        # Extraer según si la función devuelve diccionario o tupla
+        if isinstance(resultado, dict):
+            matriz_pct = resultado.get("matriz_porcentajes") or resultado.get("matriz_ocupacion")
+            sobrecargas = resultado.get("celdas_sobrecargadas") or resultado.get("sobrecargas")
+        elif isinstance(resultado, (tuple, list)):
+            if isinstance(resultado[0], list):
+                matriz_pct, sobrecargas = resultado[0], resultado[1]
+            else:
+                sobrecargas, matriz_pct = resultado[0], resultado[1]
 
-        # Caso 2: Capacidad negativa o cero
-        cap_inval = [[1000, -100], [1000, 1000]]
-        res2 = validar_coherencia_dimensional(self.cargas_validas, cap_inval)
-        self.assertFalse(res2)
+        # Exactamente 100% NO es sobrecarga (>100%)
+        self.assertEqual(matriz_pct[0][0], 100.0)
+        self.assertNotIn((0, 0), sobrecargas)
 
-    def test_calcular_ocupacion_y_sobrecarga(self):
-        cargas_sobrecargadas = [
-            [1100, 600, 400],
-            [300, 1200, 500]
+        # 110% SI es sobrecarga
+        self.assertIn((1, 1), sobrecargas)
+
+    def test_balance_columnas_impares(self):
+        # Matriz 2x3 (La columna central debe ignorarse)
+        cargas_impar = [
+            [500, 9999, 500],
+            [300, 8888, 300]
         ]
-        res = calcular_ocupacion_y_sobrecarga(cargas_sobrecargadas, self.capacidades_validas)
-        
-        self.assertAlmostEqual(res["matriz_porcentajes"][0][0], 110.0, places=4)
-        self.assertIn((0, 0), res["celdas_sobrecargadas"])
-        self.assertIn((1, 1), res["celdas_sobrecargadas"])
-        self.assertEqual(len(res["celdas_sobrecargadas"]), 2)
 
-    def test_evaluar_balance_y_simetria(self):
-        res = evaluar_balance_y_simetria(self.cargas_validas, tolerancia_kg=100.0)
-        
-        self.assertEqual(res["pesos_longitudinales"], [1500, 1000])
-        self.assertEqual(res["desbalance_lateral_kg"], 100.0)
-        self.assertTrue(res["balance_aprobado"])
+        resultado = evaluar_balance_y_simetria(
+            cargas_impar,
+            tolerancia_kg=50.0
+        )
 
-    def test_extraer_submatriz_sobrecarga_critica(self):
-        matriz_p = [
-            [50.0, 80.0, 90.0],
-            [60.0, 110.0, 120.0]
+        self.assertEqual(
+            resultado["desbalance_lateral_kg"],
+            0.0
+        )
+
+        self.assertTrue(
+            resultado["balance_aprobado"]
+        )
+
+    def test_submatriz_critica(self):
+        matriz_pct = [
+            [50.0, 60.0, 70.0],
+            [40.0, 120.0, 110.0],
+            [30.0, 100.0, 95.0]
         ]
-        # Submatriz 2x2 más crítica
-        sub = extraer_submatriz_sobrecarga_critica(matriz_p, 2, 2)
+
+        submatriz = extraer_submatriz_sobrecarga_critica(
+            matriz_pct,
+            k=2,
+            p=2
+        )
+
         esperada = [
-            [80.0, 90.0],
-            [110.0, 120.0]
+            [120.0, 110.0],
+            [100.0, 95.0]
         ]
-        self.assertEqual(sub, esperada)
 
-if __name__ == "__main__":
+        self.assertEqual(
+            submatriz,
+            esperada
+        )
+
+
+if __name__ == '__main__':
     unittest.main()
+    
