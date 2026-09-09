@@ -1,5 +1,4 @@
-Markdown 
-#AeroCargo-Matrix (Auditoría de Carga Matricial)
+# AeroCargo-Matrix (Auditoría de Carga Matricial)
 
 Sistema interactivo en Python para la auditoría, procesamiento matricial, análisis de balance físico y detección de sobrecargas en aeronaves comerciales y de carga.
 
@@ -66,5 +65,3 @@ Salida del Reporte de AuditoríaPlaintext=======================================
   - Pesos Longitudinales: [2300.0 kg, 1500.0 kg]
   - Desbalance Lateral: 900.0 kg
   - Estado: RECHAZADO (Excede tolerancia)
-
----
